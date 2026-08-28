@@ -41,8 +41,18 @@ cd connect_accounts
 ```
 
 2) Start both services with Docker Compose (recommended)
+From the repository root:
+
 ```bash
-docker-compose up --build
+docker compose up --build
+```
+
+Open http://localhost:5173 in a browser. The API is available at http://localhost:8080.
+
+Stop the services with:
+
+```bash
+docker compose down
 ```
 
 2b) Or run services individually
@@ -80,6 +90,12 @@ cd backend
 cd frontend
 npm test
 npx playwright test
+```
+The optional Playwright end-to-end test runs against the Docker stack:
+
+```bash
+cd frontend
+npm run test:e2e
 ```
 
 ## API overview
