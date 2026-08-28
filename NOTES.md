@@ -1,78 +1,39 @@
 # Notes
 
-## Current Decisions
+## Quick links and set up:
 
-- Frontend: React, TypeScript, and Vite.
-- Backend: Java, Spring Boot, and Maven.
-- Persistence: one in-memory repository with deterministic seed data.
-- Scope: one implicit client; mutations last for the current server run and reset after a backend restart.
-- Uploads: metadata only, using a filename and statement date rather than real file handling.
-- Statement date rule: exactly three calendar months old is current; older is outdated; future dates are rejected.
-- Docker: frontend and backend are built as multi-stage images and started with Docker Compose.
+Please refer the link.https://github.com/SanthiniRa/connect_accounts/blob/main/README.md
+        
+# What I Built
+A full-stack account connection UI using React and Docker for containerization, with a standard Maven-based Spring Boot backend. 
+I used Co-pilot for implementation and adopted spec-driven development, building features one by one according to requirements. The frontend is responsible for presentation, user interaction, request state, and communicating readiness clearly. The backend is the source of truth for provider membership, statement status, validation, and submission eligibility. The `AccountService` coordinates use cases, while `InMemoryAccountRepository` owns the seeded mutable state for the single demo client. Status is derived from statement metadata and an injectable clock rather than stored independently, which keeps the business rule consistent and testable.
 
-## Seeded Scenario
+The API is intentionally small and resource-oriented: accounts can be listed, added, removed, or updated with statement metadata, while submission has its own server-side validation endpoint. This repository boundary allows the in-memory implementation to be replaced with a database-backed repository without moving business rules into controllers or the frontend.
 
-The initial client has four accounts:
+# Why?
+Maven for Backend: Simple and direct for a small, focused task. Maven's declarative pom.xml makes dependency and build configuration straightforward, and Java 17 with Spring Boot provides solid, battle-tested patterns for REST services.
 
-- Barclays: current statement, `UPLOADED`.
-- HSBC: no statement, `MISSING`.
-- Vanguard: older statement, `OUTDATED`.
-- Fidelity: current statement, `UPLOADED`.
+Docker for Deployment: Eliminates environment variability; reviewers can run docker-compose up --build without installing Java 17, Maven, or Node.js. Multi-stage images keep container sizes reasonable.
 
-The known-provider catalogue also includes Monzo, Nutmeg, and AJ Bell for search and multi-provider add behavior.
+In-Memory Repository with Seeded Data: Sufficient for demonstrating all scenarios (missing, outdated, current statements) without the overhead of a real database. Deterministic seed data ensures reproducible behavior and enables reliable testing.
 
-## Quick Start With Docker
+Spec-Driven Development with Copilot Agent: Breaking requirements into discrete tasks (define DTOs, build controllers, add validation, wire services) helped maintain focus and ensure completeness. Spec-driven development put me in control of the task, allowing each feature to be implemented and tested before moving to the next.
 
-From the repository root:
+UI-Centric Scope: The focus was on the frontend experience and user interaction. The backend provides just enough structure to be credible: validation, business rules, and state management. This keeps the project focused and deliverable within time constraints.
 
-```bash
-docker compose up --build
-```
+## What I'd Do With More Time
+Given more than 2 hours, the priority improvements would be:
+1. Improve UI Look & Feel
+2. Authentication & Authorization
+3. Persistent Storage & Database
+4. JSON & API Improvements
+5. Observability & Logging
+6. Audit & Compliance
+7. Project-Specific Enhancements
+All of these would be driven by requirements and prioritized based on business value and user feedback.
 
-Open http://localhost:5173 in a browser. The API is available at http://localhost:8080.
-
-Stop the services with:
-
-```bash
-docker compose down
-```
-
-The optional Playwright end-to-end test runs against the Docker stack:
-
-```bash
-cd frontend
-npm run test:e2e
-```
-
-## Local Development
-
-The host machine needs Node.js for the frontend and Java 17 plus Maven for the backend.
-
-Frontend:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Backend:
-
-```bash
-cd backend
-./mvnw spring-boot:run
-```
 
 ## Test Details
-
-### Backend tests
-
-Run the backend tests with Java 17 and Maven:
-
-```bash
-cd backend
-./mvnw test
-```
 
 The backend tests cover:
 
@@ -88,16 +49,6 @@ The backend tests cover:
 - Incomplete submission rejection with all affected providers.
 - Successful submission when every account has a current statement.
 
-### Frontend tests
-
-Run the React unit and interaction tests with:
-
-```bash
-cd frontend
-npm test
-npm run build
-```
-
 The frontend tests cover:
 
 - Loading and displaying the account snapshot.
@@ -108,54 +59,3 @@ The frontend tests cover:
 - Uploading and replacing statement metadata.
 - Disabled submit state while an account needs attention.
 - Successful submission and the disabled `Submitted` state.
-- Visible API loading errors.
-
-### End-to-end test
-
-With the Docker stack running, execute the Playwright test:
-
-```bash
-cd frontend
-npm run test:e2e
-```
-
-The end-to-end test uses the browser UI to verify the complete flow: start with the seeded incomplete state, upload HSBC's statement, replace Vanguard's outdated statement, confirm all four accounts are ready, and submit successfully.
-
-### Docker smoke test
-
-Build and start both services with:
-
-```bash
-docker compose up --build
-```
-
-Verify:
-
-- Frontend responds at `http://localhost:5173`.
-- Backend responds at `http://localhost:8080/api/accounts`.
-- The initial summary is `2 of 4 ready`.
-- Mutations remain available during the server run.
-- Restarting the backend restores the deterministic seed data.
-
-## Trade-offs
-
-In-memory state keeps the interview implementation small and deterministic, but it is not durable, multi-user, or suitable for multiple backend instances. Real production work would add authentication, a database, durable file storage, concurrency controls, health checks, audit logging, and observability.
-
-Docker Compose improves reviewer setup and repeatability, but it is intended for local demonstration rather than production orchestration.
-
-## Architecture Note
-
-The frontend is responsible for presentation, user interaction, request state, and communicating readiness clearly. The backend is the source of truth for provider membership, statement status, validation, and submission eligibility. The `AccountService` coordinates use cases, while `InMemoryAccountRepository` owns the seeded mutable state for the single demo client. Status is derived from statement metadata and an injectable clock rather than stored independently, which keeps the business rule consistent and testable.
-
-The API is intentionally small and resource-oriented: accounts can be listed, added, removed, or updated with statement metadata, while submission has its own server-side validation endpoint. This repository boundary allows the in-memory implementation to be replaced with a database-backed repository without moving business rules into controllers or the frontend.
-
-## What I'd Do With More Time
-
-- Add authentication and authorization, then model clients explicitly instead of relying on one implicit client.
-- Replace the in-memory repository with a database and add durable storage for uploaded files.
-- Add optimistic concurrency handling so simultaneous updates cannot overwrite each other silently.
-- Add a real file-upload flow with file type, size, malware, and storage validation.
-- Improve error handling with correlation IDs, structured logs, health checks, and metrics.
-- Add stronger API contract tests and a broader Playwright suite for accessibility, mobile layouts, and failure recovery.
-- Add focus trapping and focus restoration for dialogs, plus automated accessibility checks.
-- Add CI to run Maven tests, frontend tests, production builds, container builds, and end-to-end tests on every change.
